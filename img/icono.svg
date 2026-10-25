@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Icono de Stop">
+  <rect width="64" height="64" rx="14" fill="#12131A"/>
+  <path d="M22 8h20l14 14v20L42 56H22L8 42V22z" fill="#A78BFA"/>
+  <text x="32" y="43" text-anchor="middle" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#111111">S</text>
+</svg>

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12131A">
+  <title>Stop · Anfitrión</title>
+  <link rel="icon" href="img/icono.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tono.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Tema y acento se aplican antes de pintar para evitar parpadeos -->
+  <script src="js/nucleo/almacenamiento.js"></script>
+  <script src="js/tono.js"></script>
+</head>
+<body>
+  <div id="barra"></div>
+  <main class="contenido">
+    <section class="fila-tarjetas">
+      <article class="tarjeta tarjeta--centro" aria-live="polite">
+        <h1 class="tarjeta__titulo" id="sala-titulo">Configura tu sala</h1>
+        <p class="tarjeta__subtitulo" id="sala-subtitulo">Ajusta las reglas y genera el código para compartirlo</p>
+        <p class="codigo-grande" id="sala-id">----</p>
+        <div class="copiable" id="sala-resultado" hidden>
+          <input id="entrada-codigo" type="text" readonly aria-label="Código de sala">
+          <button class="boton boton--pequeno boton--primario" type="button" id="boton-copiar-codigo">Copiar código</button>
+          <button class="boton boton--pequeno" type="button" id="boton-copiar-enlace">Copiar enlace</button>
+        </div>
+      </article>
+      <article class="tarjeta">
+        <div class="campo">
+          <label class="etiqueta" for="entrada-nombre">Nombre de la sala</label>
+          <input id="entrada-nombre" type="text" maxlength="20" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label class="etiqueta" for="entrada-rondas">Rondas (1 a 12)</label>
+          <input id="entrada-rondas" type="number" min="1" max="12" inputmode="numeric">
+        </div>
+        <span class="etiqueta" id="etiqueta-dificultad">Dificultad</span>
+        <div class="chips" id="grupo-dificultad" role="group" aria-labelledby="etiqueta-dificultad"></div>
+      </article>
+    </section>
+
+    <section class="tarjeta">
+      <div class="chips" style="justify-content: space-between; align-items: center">
+        <span class="etiqueta">Letras de la partida · <span id="contador-letras"></span></span>
+        <button class="boton boton--pequeno" type="button" id="boton-sortear">Sortear letras</button>
+      </div>
+      <div class="chips" id="cuadricula-letras"></div>
+      <p class="tarjeta__subtitulo" id="orden-letras"></p>
+    </section>
+
+    <section class="tarjeta">
+      <span class="etiqueta" id="etiqueta-categorias">Categorías</span>
+      <div class="chips" id="grupo-categorias" role="group" aria-labelledby="etiqueta-categorias"></div>
+      <p class="tarjeta__subtitulo" id="nota-categorias"></p>
+    </section>
+
+    <section class="tarjeta">
+      <div class="chips" style="align-items: center; flex-wrap: nowrap">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--acento-fuerte)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Trofeo"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg>
+        <div>
+          <h2 class="tarjeta__titulo">Reglas de la partida</h2>
+          <p class="tarjeta__subtitulo">Se guardan dentro del código de sala; el jugador no las toca.</p>
+        </div>
+      </div>
+      <div class="rejilla-3">
+        <div class="loseta"><label class="etiqueta" for="regla-unica">Palabra única</label><div class="campo campo--numero"><input id="regla-unica" type="number" min="0" max="1000" inputmode="numeric"></div><span class="chip chip--suave">Puntos si nadie más la escribió</span></div>
+        <div class="loseta"><label class="etiqueta" for="regla-repetida">Palabra repetida</label><div class="campo campo--numero"><input id="regla-repetida" type="number" min="0" max="1000" inputmode="numeric"></div><span class="chip chip--suave">Puntos si otro jugador la escribió</span></div>
+        <div class="loseta"><label class="etiqueta" for="regla-invalida">Palabra inválida</label><div class="campo campo--numero"><input id="regla-invalida" type="number" min="0" max="1000" inputmode="numeric"></div><span class="chip chip--suave">No cumple categoría o letra</span></div>
+        <div class="loseta"><label class="etiqueta" for="regla-penalizacion">Penalización por segundo</label><div class="campo campo--numero"><input id="regla-penalizacion" type="number" min="0" max="100" inputmode="numeric"></div><span class="chip chip--suave">Puntos que se restan por segundo</span></div>
+        <div class="loseta"><label class="etiqueta" for="regla-gracia">Gracia por ronda (s)</label><div class="campo campo--numero"><input id="regla-gracia" type="number" min="0" max="60" inputmode="numeric"></div><span class="chip chip--suave">Segundos sin penalizar</span></div>
+        <div class="loseta">
+          <span class="etiqueta">Todo listo</span>
+          <button class="boton boton--primario" type="button" id="boton-generar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Reproducir"><path d="M6 4l14 8-14 8z"/></svg>
+            Generar sala
+          </button>
+          <a class="boton boton--pequeno" id="enlace-verificacion" href="verificacion.html" hidden>Ir a verificación</a>
+          <span class="chip chip--suave">También con Enter</span>
+        </div>
+      </div>
+      <p class="aviso" id="mensaje" role="status"></p>
+    </section>
+  </main>
+
+  <script src="js/nucleo/dom.js"></script>
+  <script src="js/nucleo/iconos.js"></script>
+  <script src="js/nucleo/tiempo.js"></script>
+  <script src="js/nucleo/letras.js"></script>
+  <script src="js/nucleo/categorias.js"></script>
+  <script src="js/nucleo/puntuacion.js"></script>
+  <script src="js/nucleo/codigo-sala.js"></script>
+  <script src="js/barra.js"></script>
+  <script src="js/vistas/anfitrion.js"></script>
+</body>
+</html>

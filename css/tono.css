@@ -1,0 +1,58 @@
+/* ==========================================================
+   tono.css · Variables de tema (claro/oscuro), acento y contraste
+   El tema oscuro es el base. El claro se activa por preferencia
+   del sistema o por data-tema="claro" (botón de la barra).
+   ========================================================== */
+:root {
+  color-scheme: dark;
+
+  /* Superficies */
+  --fondo: #12131A;
+  --superficie: #1F2027;
+  --superficie-2: #191A21;
+  --borde: #2C2D36;
+  --borde-fuerte: #34353F;
+
+  /* Texto */
+  --texto: #F4F4F6;
+  --texto-tenue: #B4B6C0;
+
+  /* Acento (lo escribe js/tono.js) */
+  --acento: #A78BFA;
+  --sobre-acento: #111111;
+  --acento-fuerte: var(--acento);
+  --acento-suave: color-mix(in srgb, var(--acento) 18%, var(--superficie-2));
+
+  /* Estados */
+  --peligro: #F87171;
+}
+
+/* Tema claro por preferencia del sistema */
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema="oscuro"]) {
+    color-scheme: light;
+    --fondo: #F6F6F9;
+    --superficie: #FFFFFF;
+    --superficie-2: #F0F1F5;
+    --borde: #E2E3EA;
+    --borde-fuerte: #CFD1DB;
+    --texto: #14151B;
+    --texto-tenue: #5B5E6B;
+    --peligro: #B91C1C;
+    --acento-fuerte: color-mix(in srgb, var(--acento) 55%, #000);
+  }
+}
+
+/* Tema claro forzado por el botón */
+:root[data-tema="claro"] {
+  color-scheme: light;
+  --fondo: #F6F6F9;
+  --superficie: #FFFFFF;
+  --superficie-2: #F0F1F5;
+  --borde: #E2E3EA;
+  --borde-fuerte: #CFD1DB;
+  --texto: #14151B;
+  --texto-tenue: #5B5E6B;
+  --peligro: #B91C1C;
+  --acento-fuerte: color-mix(in srgb, var(--acento) 55%, #000);
+}
