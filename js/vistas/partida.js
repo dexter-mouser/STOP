@@ -88,7 +88,7 @@
     $('estado-ronda').textContent = ESTADOS[estado.fase];
     let detalle = 'Ronda sin iniciar';
     if (final) detalle = 'Todas las rondas jugadas';
-    else if (ronda.inicio !== null) detalle = 'Inicio ' + Stop.tiempo.formatear(ronda.inicio) + (ronda.cierre === null ? '' : ' · Cierre ' + Stop.tiempo.formatear(ronda.cierre));
+    else if (ronda.inicio !== null) detalle = 'Inicio ' + Stop.tiempo.formatear(ronda.inicio) + (ronda.cierre === null ? '' : ' · Cierre ' + Stop.tiempo.formatear(ronda.cierre) + ' · Tiempo oficial ' + Stop.tiempo.duracion(ronda.cierre - ronda.inicio));
     $('cronometro-detalle').textContent = detalle;
     pintarOrden();
     pintarCronometro();
@@ -207,7 +207,7 @@
       crear('div', { clase: 'rejilla-3' },
         crear('div', { clase: 'loseta' }, crear('span', { clase: 'etiqueta', texto: 'Suma de la ronda' }), refs.totalRonda),
         crear('div', { clase: 'loseta' }, crear('span', { clase: 'etiqueta', texto: 'Suma de la partida' }), refs.totalPartida),
-        crear('div', { clase: 'loseta' }, crear('span', { clase: 'etiqueta', texto: 'Cierre oficial' }), crear('span', { clase: 'loseta__cifra', texto: Stop.tiempo.formatear(rondaActual().cierre) })))));
+        crear('div', { clase: 'loseta' }, crear('span', { clase: 'etiqueta', texto: 'Tiempo oficial' }), crear('span', { clase: 'loseta__cifra', texto: Stop.tiempo.duracion(rondaActual().cierre - rondaActual().inicio) })))));
     estado.config.categorias.forEach((id) => zona.append(crearTarjetaCategoria(id)));
     actualizarTotales();
   }
@@ -290,7 +290,7 @@
   function iniciar() {
     Stop.barra.montar('Partida', 'anfitrion');
     Stop.tiempo.iniciarReloj($('hora-actual'));
-    setInterval(pintarCronometro, 1000);
+    setInterval(pintarCronometro, 250); // 4 veces por segundo para que el cronómetro no se atrase
     if (!estado) {
       const sala = almacen.leer('sala'); // la guarda la pantalla de configuración
       if (sala && sala.config && Array.isArray(sala.config.letras) && sala.config.letras.length) {

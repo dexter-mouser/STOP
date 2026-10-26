@@ -22,18 +22,27 @@ Stop.tiempo = (function () {
     return horas * 3600 + minutos * 60 + segundos;
   }
 
-  // Muestra la hora actual en un elemento y la actualiza cada segundo
+  // Muestra la hora actual en un elemento. Se revisa 4 veces por segundo para que el cambio de
+  // segundo se vea a tiempo (con un intervalo de 1 s el reloj se atrasaría hasta un segundo)
   function iniciarReloj(elemento) {
     const pintar = () => { elemento.textContent = formatear(Date.now()); };
     pintar();
-    const identificador = setInterval(pintar, 1000);
+    const identificador = setInterval(pintar, 250);
     return () => clearInterval(identificador);
   }
 
-  // Milisegundos -> segundos transcurridos desde la medianoche
-  function segundosDelDia(milisegundos) {
-    const fecha = new Date(milisegundos);
-    return fecha.getHours() * 3600 + fecha.getMinutes() * 60 + fecha.getSeconds();
+  // "MM:SS" o "H:MM:SS" -> segundos (o null si el formato no es válido)
+  function aDuracion(texto) {
+    const limpio = String(texto || '').trim();
+    let coincidencia = /^(\d{1,3}):([0-5]\d)$/.exec(limpio);
+    if (coincidencia) return Number(coincidencia[1]) * 60 + Number(coincidencia[2]);
+    coincidencia = /^(\d{1,2}):([0-5]\d):([0-5]\d)$/.exec(limpio);
+    return coincidencia ? Number(coincidencia[1]) * 3600 + Number(coincidencia[2]) * 60 + Number(coincidencia[3]) : null;
+  }
+
+  // Segundos enteros transcurridos entre dos instantes en milisegundos (no depende de la hora del reloj)
+  function segundosEntre(inicio, fin) {
+    return Math.max(0, Math.floor((fin - inicio) / 1000));
   }
 
   // Milisegundos -> "MM:SS" (para cronómetros)
@@ -42,5 +51,5 @@ Stop.tiempo = (function () {
     return dosDigitos(Math.floor(total / 60)) + ':' + dosDigitos(total % 60);
   }
 
-  return { formatear, aSegundos, segundosDelDia, duracion, iniciarReloj };
+  return { formatear, aSegundos, aDuracion, segundosEntre, duracion, iniciarReloj };
 })();

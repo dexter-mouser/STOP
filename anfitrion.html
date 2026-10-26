@@ -18,6 +18,10 @@
     <section class="fila-tarjetas">
       <article class="tarjeta tarjeta--centro">
         <button class="codigo-grande" type="button" id="codigo-sala" aria-label="Código de sala no disponible" disabled>----</button>
+        <button class="boton boton--pequeno" type="button" id="boton-copiar" disabled>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Copiar"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+          Copiar código
+        </button>
       </article>
       <article class="tarjeta">
         <div class="campo">
@@ -43,6 +47,15 @@
       <span class="etiqueta" id="etiqueta-categorias">Cosas que hay que buscar</span>
       <div class="chips" id="grupo-categorias" role="group" aria-labelledby="etiqueta-categorias"></div>
       <p class="tarjeta__subtitulo" id="nota-categorias"></p>
+      <div id="bloque-propias" class="contenido" style="width: 100%; gap: 10px; padding: 0" hidden>
+        <span class="etiqueta">Tus categorías · <span id="contador-propias"></span></span>
+        <div class="chips" id="lista-propias"></div>
+        <form class="formulario-palabra" id="formulario-propia">
+          <input id="entrada-propia" type="text" maxlength="20" autocomplete="off" aria-label="Nombre de la nueva categoría" placeholder="Ej.: Instrumento musical">
+          <button class="boton boton--pequeno boton--primario" type="submit">Añadir categoría</button>
+        </form>
+        <p class="aviso" id="mensaje-propia" role="status"></p>
+      </div>
     </section>
 
     <section class="tarjeta">
@@ -73,6 +86,7 @@
   </main>
 
   <script src="js/nucleo/dom.js"></script>
+  <script src="js/nucleo/portapapeles.js"></script>
   <script src="js/nucleo/iconos.js"></script>
   <script src="js/nucleo/tiempo.js"></script>
   <script src="js/nucleo/letras.js"></script>

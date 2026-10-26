@@ -27,30 +27,50 @@
         <div class="chips" style="justify-content: space-between; align-items: center">
           <div>
             <h1 class="tarjeta__titulo">Verificación de victoria</h1>
-            <p class="tarjeta__subtitulo">Anota los puntos que dice tener cada jugador. Se audita al que declare más.</p>
+            <p class="tarjeta__subtitulo">Cada jugador comparte su resultado desde el celular. Pégalo aquí y la app revisa sola sus palabras, sus tiempos y sus puntos.</p>
           </div>
           <a class="boton boton--pequeno" href="partida.html">Volver a la partida</a>
         </div>
-        <form class="formulario-linea" id="formulario-declaracion">
-          <input id="entrada-nombre" type="text" maxlength="20" autocomplete="off" aria-label="Nombre del jugador" placeholder="Nombre">
-          <input id="entrada-puntos" type="number" min="0" max="99999" inputmode="numeric" aria-label="Puntos que declara" placeholder="Puntos">
-          <button class="boton boton--pequeno boton--primario" type="submit">Anotar jugador</button>
-        </form>
-        <p class="aviso" id="mensaje-declaracion" role="status"></p>
-        <div id="lista-declaraciones"></div>
+        <div class="chips">
+          <button class="boton boton--primario" type="button" id="boton-pegar-resultado">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Pegar"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5a3 3 0 0 1 6 0M9 12h6M9 16h6"/></svg>
+            Pegar resultado
+          </button>
+        </div>
+        <details class="plegable" id="detalle-pegado">
+          <summary>¿No funciona el botón? Pega el resultado aquí</summary>
+          <form class="formulario-palabra" id="formulario-resultado">
+            <textarea class="area-texto" id="entrada-resultado" aria-label="Resultado del jugador"></textarea>
+            <button class="boton boton--pequeno boton--primario" type="submit">Añadir resultado</button>
+          </form>
+        </details>
+        <details class="plegable">
+          <summary>¿Un jugador no puede enviar su resultado? Anótalo a mano</summary>
+          <form class="formulario-linea" id="formulario-declaracion">
+            <input id="entrada-nombre" type="text" maxlength="20" autocomplete="off" aria-label="Nombre del jugador" placeholder="Nombre">
+            <input id="entrada-puntos" type="number" min="0" max="99999" inputmode="numeric" aria-label="Puntos que declara" placeholder="Puntos">
+            <button class="boton boton--pequeno" type="submit">Anotar jugador</button>
+          </form>
+          <p class="aviso" id="mensaje-declaracion" role="status"></p>
+        </details>
+        <p class="aviso" id="mensaje-resultado" role="status"></p>
       </section>
+
+      <section class="tarjeta" id="resumen-verificacion"></section>
 
       <div id="zona-auditoria" class="contenido" style="width: 100%; padding: 0"></div>
     </div>
   </main>
 
   <script src="js/nucleo/dom.js"></script>
+  <script src="js/nucleo/portapapeles.js"></script>
   <script src="js/nucleo/iconos.js"></script>
   <script src="js/nucleo/tiempo.js"></script>
   <script src="js/nucleo/letras.js"></script>
   <script src="js/nucleo/categorias.js"></script>
   <script src="js/nucleo/puntuacion.js"></script>
   <script src="js/nucleo/codigo-sala.js"></script>
+  <script src="js/nucleo/resultado.js"></script>
   <script src="js/barra.js"></script>
   <script src="js/vistas/verificacion.js"></script>
 </body>

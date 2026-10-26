@@ -21,7 +21,15 @@
       <h1 class="tarjeta__titulo">Entrar a la partida</h1>
       <p class="tarjeta__subtitulo">Escribe el código que te dio el anfitrión y tu nombre.</p>
       <form id="formulario-ingreso" class="contenido" style="width: 100%; gap: 14px; padding: 0">
-        <div class="campo"><label class="etiqueta" for="entrada-codigo">Código de sala</label><input id="entrada-codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+        <div class="campo"><label class="etiqueta" for="entrada-codigo">Código de sala</label>
+          <div class="copiable">
+            <input id="entrada-codigo" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button class="boton boton--pequeno" type="button" id="boton-pegar">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Pegar"><rect x="6" y="5" width="12" height="16" rx="2"/><path d="M9 5a3 3 0 0 1 6 0M9 12h6M9 16h6"/></svg>
+              Pegar código
+            </button>
+          </div>
+        </div>
         <div class="campo"><label class="etiqueta" for="entrada-jugador">Tu nombre</label><input id="entrada-jugador" type="text" maxlength="20" autocomplete="nickname"></div>
         <p class="aviso" id="mensaje-ingreso" role="status"></p>
         <button class="boton boton--primario" type="submit">Entrar</button>
@@ -58,6 +66,19 @@
         <p class="tarjeta__subtitulo">El anfitrión audita estos datos si tienes la mayor puntuación.</p>
       </div>
       <div class="tarjeta" id="detalle-final"></div>
+      <div class="tarjeta">
+        <h2 class="tarjeta__titulo">Resultado para el anfitrión</h2>
+        <p class="tarjeta__subtitulo">Lleva tus palabras, tus tiempos y tus puntos. El anfitrión lo pega en su pantalla y la app lo revisa sola.</p>
+        <div class="chips">
+          <button class="boton boton--primario" type="button" id="boton-copiar-resultado">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Copiar"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>
+            Copiar resultado
+          </button>
+          <button class="boton" type="button" id="boton-compartir" hidden>Compartir</button>
+        </div>
+        <textarea class="area-texto" id="texto-resultado" readonly aria-label="Resultado para el anfitrión"></textarea>
+        <p class="aviso aviso--ok" id="mensaje-resultado" role="status"></p>
+      </div>
       <div class="chips">
         <button class="boton" type="button" id="boton-volver">Volver a la ronda</button>
         <button class="boton boton--pequeno" type="button" id="boton-nueva">Nueva partida</button>
@@ -75,12 +96,14 @@
   </div>
 
   <script src="js/nucleo/dom.js"></script>
+  <script src="js/nucleo/portapapeles.js"></script>
   <script src="js/nucleo/iconos.js"></script>
   <script src="js/nucleo/tiempo.js"></script>
   <script src="js/nucleo/letras.js"></script>
   <script src="js/nucleo/categorias.js"></script>
   <script src="js/nucleo/puntuacion.js"></script>
   <script src="js/nucleo/codigo-sala.js"></script>
+  <script src="js/nucleo/resultado.js"></script>
   <script src="js/barra.js"></script>
   <script src="js/vistas/jugador.js"></script>
 </body>

@@ -8,6 +8,9 @@
   let sesion = almacen.leer('jugador'); // { codigo, nombre, config, ronda, fase, rondas: [...] }
   const guardar = () => almacen.guardar('jugador', sesion);
 
+  // "Sala XXXX · " solo si el código es corto; uno largo (con categorías propias) ocuparía varias líneas
+  const etiquetaSala = () => (sesion.codigo.length <= 8 ? 'Sala ' + Stop.codigoSala.formatear(sesion.codigo) + ' · ' : '');
+
   // ---------- Pantallas ----------
   function mostrar(nombre) {
     $('pantalla-ingreso').hidden = nombre !== 'ingreso';
@@ -18,6 +21,8 @@
   }
 
   const rondaActual = () => sesion.rondas[sesion.ronda];
+  // Tiempo que tardó el jugador, medido desde que inició la ronda (no depende de la hora del reloj)
+  const duracionDe = (ronda) => (ronda.inicio === null || ronda.fin === null ? '--:--' : Stop.tiempo.duracion(ronda.fin - ronda.inicio));
   const puntosDe = (ronda) => Stop.puntuacion.puntosRonda(sesion.config.categorias, ronda.respuestas, ronda.marcas, sesion.config.reglas);
 
   // ---------- Ingreso ----------
@@ -36,10 +41,18 @@
     pintarRonda();
   }
 
+  async function pegarCodigo() {
+    const texto = await Stop.portapapeles.pegar();
+    if (texto === null) { $('mensaje-ingreso').textContent = 'El navegador no permite pegar con el botón. Mantén pulsado el campo y elige Pegar.'; return; }
+    $('entrada-codigo').value = texto.trim();
+    $('mensaje-ingreso').textContent = '';
+    $('entrada-jugador').focus();
+  }
+
   // ---------- Ronda ----------
   function pintarRonda() {
     const ronda = rondaActual();
-    $('ronda-sala').textContent = 'Sala ' + Stop.codigoSala.formatear(sesion.codigo) + ' · ' + sesion.nombre;
+    $('ronda-sala').textContent = etiquetaSala() + sesion.nombre;
     $('ronda-numero').textContent = 'Ronda ' + (sesion.ronda + 1) + ' de ' + sesion.config.rondas;
     $('ronda-cifra').textContent = String(sesion.ronda + 1);
     $('ronda-insignia').setAttribute('aria-label', 'Ronda ' + (sesion.ronda + 1));
@@ -97,6 +110,8 @@
       crear('span', { clase: 'etiqueta', texto: 'Puntos de la ronda' }),
       crear('strong', { texto: String(puntosDe(ronda)) })));
 
+    zona.append(crear('p', { clase: 'tarjeta__subtitulo', texto: 'Tu tiempo en esta ronda: ' + duracionDe(ronda) + '. El anfitrión lo compara con el tiempo oficial.' }));
+
     const hayMas = sesion.ronda < sesion.rondas.length - 1;
     const acciones = crear('div', { clase: 'chips' });
     if (hayMas) acciones.append(crear('button', { clase: 'boton boton--primario', type: 'button', texto: 'Siguiente ronda', enClick: siguienteRonda }));
@@ -144,7 +159,17 @@
 
   function pintarFinal() {
     const total = sesion.rondas.reduce((suma, ronda) => suma + puntosDe(ronda), 0);
-    $('final-jugador').textContent = sesion.nombre + ' · Sala ' + Stop.codigoSala.formatear(sesion.codigo);
+    const resultado = Stop.resultado.crear({
+      codigo: sesion.codigo, nombre: sesion.nombre, puntos: total,
+      rondas: sesion.rondas.map((ronda) => ({
+        tiempo: ronda.inicio === null || ronda.fin === null ? null : Stop.tiempo.segundosEntre(ronda.inicio, ronda.fin),
+        palabras: sesion.config.categorias.map((id) => (ronda.respuestas[id] || '').trim().slice(0, 40))
+      }))
+    });
+    $('texto-resultado').value = resultado;
+    $('boton-compartir').hidden = typeof navigator.share !== 'function';
+    $('mensaje-resultado').textContent = '';
+    $('final-jugador').textContent = etiquetaSala() + sesion.nombre;
     $('total-puntos').textContent = String(total);
     const detalle = $('detalle-final');
     vaciar(detalle);
@@ -157,10 +182,21 @@
         crear('div', { clase: 'detalle-ronda__cabecera' },
           crear('span', { texto: 'Ronda ' + (indice + 1) }),
           crear('span', { texto: puntosDe(ronda) + ' pts' })),
-        crear('div', { clase: 'detalle-ronda__datos', texto: 'Inicio ' + Stop.tiempo.formatear(ronda.inicio) + ' · Final ' + Stop.tiempo.formatear(ronda.fin) }),
+        crear('div', { clase: 'detalle-ronda__datos', texto: 'Inicio ' + Stop.tiempo.formatear(ronda.inicio) + ' · Final ' + Stop.tiempo.formatear(ronda.fin) + ' · Tiempo ' + duracionDe(ronda) }),
         crear('div', { clase: 'detalle-ronda__datos', texto: palabras })));
     });
     mostrar('final');
+  }
+
+  async function copiarResultado() {
+    const copiado = await Stop.portapapeles.copiar($('texto-resultado').value);
+    $('mensaje-resultado').textContent = copiado ? 'Resultado copiado. Envíaselo al anfitrión.' : 'No se pudo copiar: selecciona el texto del recuadro y cópialo.';
+  }
+
+  async function compartirResultado() {
+    try {
+      await navigator.share({ title: 'Resultado de Stop', text: $('texto-resultado').value });
+    } catch (error) { /* el jugador canceló */ }
   }
 
   function nuevaPartida() {
@@ -176,9 +212,12 @@
     Stop.barra.montar('Jugador', 'jugador');
     Stop.tiempo.iniciarReloj($('hora-actual'));
     $('formulario-ingreso').addEventListener('submit', entrar);
+    $('boton-pegar').addEventListener('click', pegarCodigo);
     $('boton-iniciar').addEventListener('click', iniciarRonda);
     $('boton-stop').addEventListener('click', pulsarStop);
     $('boton-nueva').addEventListener('click', nuevaPartida);
+    $('boton-copiar-resultado').addEventListener('click', copiarResultado);
+    $('boton-compartir').addEventListener('click', compartirResultado);
     $('boton-volver').addEventListener('click', () => { sesion.fase = 'coordinando'; sesion.ronda = Math.min(sesion.ronda, sesion.rondas.length - 1); guardar(); pintarRonda(); });
     if (window.location.hash.length > 1) $('entrada-codigo').value = decodeURIComponent(window.location.hash.slice(1));
 

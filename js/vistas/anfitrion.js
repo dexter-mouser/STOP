@@ -27,6 +27,9 @@
   estado.categorias = estado.categorias.filter(Stop.categorias.esValida);
   if (!estado.categorias.length) estado.categorias = Stop.categorias.NIVELES[estado.dificultad].slice();
   estado.letras = estado.letras.filter(Stop.letras.esValida);
+  // Categorías propias: se guardan aparte para no perderlas al cambiar de nivel
+  estado.propias = (Array.isArray(guardado.propias) ? guardado.propias : []).map(Stop.categorias.limpiarNombre).filter(Boolean).slice(0, Stop.categorias.MAXIMO_PROPIAS);
+  sincronizarPropias();
 
   let codigoActual = '';
   const guardarBorrador = () => almacen.guardar('anfitrion', estado);
@@ -47,18 +50,16 @@
     boton.disabled = !codigoActual;
     boton.setAttribute('aria-label', codigoActual ? 'Código de sala ' + visible + '. Pulsa para copiarlo.' : 'Código de sala no disponible');
     boton.classList.toggle('codigo-grande--medio', codigoActual.length > 6 && codigoActual.length <= 10);
-    boton.classList.toggle('codigo-grande--largo', codigoActual.length > 10);
+    boton.classList.toggle('codigo-grande--largo', codigoActual.length > 10 && codigoActual.length <= 24);
+    boton.classList.toggle('codigo-grande--muy-largo', codigoActual.length > 24);
+    $('boton-copiar').disabled = !codigoActual;
     $('mensaje-codigo').textContent = '';
   }
 
   async function copiarCodigo() {
     if (!codigoActual) return;
-    try {
-      await navigator.clipboard.writeText(codigoActual);
-      $('mensaje-codigo').textContent = 'Código copiado.';
-    } catch (error) {
-      $('mensaje-codigo').textContent = 'No se pudo copiar. Anota el código: ' + Stop.codigoSala.formatear(codigoActual);
-    }
+    const copiado = await Stop.portapapeles.copiar(codigoActual);
+    $('mensaje-codigo').textContent = copiado ? 'Código copiado.' : 'No se pudo copiar. Anota el código: ' + Stop.codigoSala.formatear(codigoActual);
   }
 
   // ---------- Dificultad ----------
@@ -80,6 +81,7 @@
       estado.categorias = Stop.categorias.NIVELES[nivel].slice();
       estado.letras = Stop.letras.sortear(nivel, estado.rondas);
     }
+    sincronizarPropias();
     refrescar();
   }
 
@@ -131,8 +133,52 @@
   // ---------- Categorías ----------
   // Se mantienen en el orden del catálogo (así coinciden con las del código de sala)
   function ordenarCategorias() {
-    const ids = Stop.categorias.CATALOGO.map((categoria) => categoria.id);
-    estado.categorias.sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
+    estado.categorias = Stop.categorias.ordenar(estado.categorias);
+  }
+
+  // Las categorías propias solo cuentan en el nivel "Personalizada"
+  function sincronizarPropias() {
+    estado.categorias = estado.categorias.filter((id) => !Stop.categorias.esPropia(id));
+    if (estado.dificultad === 'personalizada') estado.categorias = estado.categorias.concat(estado.propias.map(Stop.categorias.crearId));
+    ordenarCategorias();
+  }
+
+  function pintarPropias() {
+    const editable = estado.dificultad === 'personalizada';
+    $('bloque-propias').hidden = !editable;
+    const lista = $('lista-propias');
+    vaciar(lista);
+    estado.propias.forEach((nombre) => {
+      lista.append(crear('span', { clase: 'chip chip--propia' }, nombre,
+        crear('button', { clase: 'boton-quitar', type: 'button', 'aria-label': 'Quitar la categoría ' + nombre, enClick: () => quitarPropia(nombre) },
+          Stop.iconos.crear('cerrar', 'Quitar', 16))));
+    });
+    $('contador-propias').textContent = estado.propias.length + ' de ' + Stop.categorias.MAXIMO_PROPIAS;
+  }
+
+  function anadirPropia(evento) {
+    evento.preventDefault();
+    const aviso = $('mensaje-propia');
+    const nombre = Stop.categorias.limpiarNombre($('entrada-propia').value);
+    if (!nombre) { aviso.textContent = 'Escribe el nombre de la categoría.'; return; }
+    if (estado.propias.length >= Stop.categorias.MAXIMO_PROPIAS) { aviso.textContent = 'Puedes añadir hasta ' + Stop.categorias.MAXIMO_PROPIAS + ' categorías propias.'; return; }
+    if (Stop.categorias.existeNombre(nombre, estado.propias)) { aviso.textContent = 'Esa categoría ya existe.'; return; }
+    estado.propias.push(nombre);
+    aviso.textContent = '';
+    $('entrada-propia').value = '';
+    sincronizarPropias();
+    guardarBorrador();
+    pintarCategorias();
+    actualizarCodigo();
+    $('entrada-propia').focus();
+  }
+
+  function quitarPropia(nombre) {
+    estado.propias = estado.propias.filter((otra) => otra !== nombre);
+    sincronizarPropias();
+    guardarBorrador();
+    pintarCategorias();
+    actualizarCodigo();
   }
 
   function pintarCategorias() {
@@ -146,6 +192,7 @@
         enClick: () => alternarCategoria(categoria.id)
       }));
     });
+    pintarPropias();
     $('nota-categorias').textContent = editable
       ? 'Toca cada categoría para sumarla o quitarla.'
       : 'Las categorías las define el nivel. Elige "Personalizada" para escogerlas tú.';
@@ -206,6 +253,8 @@
     $('entrada-rondas').addEventListener('change', (evento) => ajustarRondas(evento.target.value));
     $('boton-sortear').addEventListener('click', sortearLetras);
     $('codigo-sala').addEventListener('click', copiarCodigo);
+    $('boton-copiar').addEventListener('click', copiarCodigo);
+    $('formulario-propia').addEventListener('submit', anadirPropia);
     $('boton-iniciar').addEventListener('click', iniciarPartida);
     const previa = almacen.leer('partida');
     $('enlace-continuar').hidden = !(previa && previa.version === 3);

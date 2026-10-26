@@ -18,7 +18,7 @@ Stop.barra = (function () {
         'Aprietas el botón para empezar y el reloj empieza a correr.',
         'Cuando un amigo grita ¡STOP!, tú aprietas el botón STOP. Todos dejan de escribir.',
         'Cada amigo dice sus palabras y tú las anotas. Si nadie más dijo esa palabra, vale 100 puntos. Si otro amigo dijo la misma, vale 50. Si no sirve, vale 0.',
-        'Al final, el amigo que dice que tiene más puntos te enseña sus palabras. Tú miras si dijo la verdad. ¡Y gana el que no hizo trampa!'
+        'Al final, tus amigos te mandan su resultado y tú lo pegas. La computadora revisa sola quién dijo la verdad. ¡Y gana el que no hizo trampa!'
       ]
     },
     jugador: {
@@ -30,7 +30,7 @@ Stop.barra = (function () {
         'Cuando termines, aprieta STOP y grita ¡STOP! ¡Tu celular se queda quieto!',
         'Dices tus palabras en voz alta y las enseñas en tu celular. El anfitrión las anota.',
         'Marca cada palabra: Única si nadie más la dijo, Repetida si otro amigo dijo la misma, Inválida si no sirve. Tu celular suma tus puntos.',
-        'Si tienes más puntos que todos, el anfitrión revisa tus palabras. ¡Siempre di la verdad!'
+        'Al final, copia tu resultado y mándaselo al anfitrión. Su computadora revisa tus palabras y tus puntos. ¡Siempre di la verdad!'
       ]
     }
   };
@@ -107,7 +107,7 @@ Stop.barra = (function () {
     if (GUIAS[guia]) guiaInicial = guia;
     const ayuda = crear('button', { clase: 'boton-circular', type: 'button', 'aria-label': 'Ayuda: cómo jugar', enClick: () => abrirAyuda() });
     ayuda.append(Stop.iconos.crear('ayuda', 'Ayuda'));
-    const marca = crear('a', { clase: 'barra__marca', href: 'index.html' }, Stop.iconos.crearLogo(), crear('span', { texto: titulo }));
+    const marca = crear('a', { clase: 'barra__marca', href: 'index.html', 'aria-label': 'Stop, ' + titulo + '. Ir al inicio' }, Stop.iconos.crearLogo(), crear('span', { clase: 'barra__titulo', texto: titulo }));
     document.getElementById('barra').append(crear('header', { clase: 'barra' }, marca, crearAcentos(), ayuda, crearBotonTema()));
   }
 

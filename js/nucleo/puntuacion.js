@@ -22,10 +22,11 @@ Stop.puntuacion = (function () {
     return categorias.reduce((total, id) => total + puntosPalabra(respuestas[id], marcas[id], reglas), 0);
   }
 
-  // Segundos fuera de ronda, descontando la gracia
-  function excesoSegundos(finJugador, cierreOficial, gracia) {
-    if (finJugador === null || cierreOficial === null) return 0;
-    return Math.max(0, finJugador - cierreOficial - gracia);
+  // Segundos de más del jugador respecto al tiempo oficial de la ronda, descontando el margen.
+  // Ambos tiempos son duraciones (desde que se inició la ronda), así que no dependen de los relojes.
+  function excesoSegundos(duracionJugador, duracionOficial, gracia) {
+    if (duracionJugador === null || duracionOficial === null) return 0;
+    return Math.max(0, duracionJugador - duracionOficial - gracia);
   }
 
   function penalizacion(exceso, porSegundo) { return exceso * porSegundo; }

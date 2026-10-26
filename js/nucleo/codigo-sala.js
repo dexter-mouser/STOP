@@ -1,5 +1,5 @@
 /* codigo-sala.js · Genera, valida y lee el código de sala.
-   El código solo lleva lo que necesita el jugador (rondas, categorías y puntos). Las letras
+   El código solo lleva lo que necesita el jugador (rondas, categorías, con sus nombres si son propias, y puntos). Las letras
    NO viajan en él: las guarda únicamente el anfitrión. Es corto, no distingue mayúsculas y
    evita caracteres confusos (sin O, I, L ni U). Los 2 últimos caracteres detectan errores. */
 window.Stop = window.Stop || {};
@@ -69,6 +69,8 @@ Stop.codigoSala = (function () {
     const categorias = config.categorias;
     if (!Array.isArray(categorias) || categorias.length < 1) return 'Elige al menos una categoría.';
     if (!categorias.every(Stop.categorias.esValida) || new Set(categorias).size !== categorias.length) return 'Las categorías no son válidas.';
+    if (categorias.filter(Stop.categorias.esPropia).length > Stop.categorias.MAXIMO_PROPIAS) return 'Puedes añadir hasta ' + Stop.categorias.MAXIMO_PROPIAS + ' categorías propias.';
+    if (!mismoOrden(categorias, Stop.categorias.ordenar(categorias))) return 'Las categorías van primero las del catálogo y después las propias.';
     const reglas = config.reglas || {};
     if (![reglas.unica, reglas.repetida, reglas.invalida].every((valor) => entero(valor, 0, 1000))) return 'Los puntos por palabra deben estar entre 0 y 1000.';
     if (!entero(reglas.penalizacion, 0, 100)) return 'La penalización debe estar entre 0 y 100.';
@@ -99,7 +101,8 @@ Stop.codigoSala = (function () {
     escritor.poner(DIFICULTADES.indexOf(config.dificultad), 2);
     escritor.poner(config.rondas - 1, 4);
 
-    const delNivel = mismoOrden(config.categorias, Stop.categorias.NIVELES[config.dificultad]);
+    const propias = config.categorias.filter(Stop.categorias.esPropia);
+    const delNivel = !propias.length && mismoOrden(config.categorias, Stop.categorias.NIVELES[config.dificultad]);
     escritor.poner(delNivel ? 1 : 0, 1);
     if (!delNivel) {
       let mascara = 0;
@@ -107,6 +110,12 @@ Stop.codigoSala = (function () {
         if (config.categorias.includes(categoria.id)) mascara |= 1 << indice;
       });
       escritor.poner(mascara, Stop.categorias.CATALOGO.length);
+      escritor.poner(propias.length, 2); // hasta 3 categorías propias, cada una con su nombre
+      propias.forEach((id) => {
+        const bytes = Array.from(new TextEncoder().encode(Stop.categorias.nombrePorId(id)));
+        escritor.poner(bytes.length, 5);
+        bytes.forEach((byte) => escritor.poner(byte, 8));
+      });
     }
 
     const reglas = config.reglas;
@@ -150,6 +159,12 @@ Stop.codigoSala = (function () {
       } else {
         const mascara = lector.tomar(Stop.categorias.CATALOGO.length);
         categorias = Stop.categorias.CATALOGO.filter((_categoria, indice) => mascara & (1 << indice)).map((categoria) => categoria.id);
+        const cantidadPropias = lector.tomar(2);
+        for (let i = 0; i < cantidadPropias; i++) {
+          const largo = lector.tomar(5);
+          const bytes = Array.from({ length: largo }, () => lector.tomar(8));
+          categorias.push(Stop.categorias.crearId(new TextDecoder().decode(Uint8Array.from(bytes))));
+        }
       }
 
       let reglas = Object.assign({}, REGLAS_POR_DEFECTO);
