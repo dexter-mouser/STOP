@@ -14,7 +14,8 @@ Stop.iconos = (function () {
     trofeo: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/>',
     pantalla: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
     celular: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 18h.01"/>',
-    parada: '<path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z"/>'
+    parada: '<path d="M8 2h8l6 6v8l-6 6H8l-6-6V8z"/>',
+    cerrar: '<path d="M6 6l12 12M18 6L6 18"/>'
   };
 
   // Devuelve un elemento <svg> listo para insertar

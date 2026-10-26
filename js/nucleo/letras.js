@@ -21,12 +21,17 @@ Stop.letras = (function () {
     return reserva.slice(0, Math.min(cantidad, reserva.length));
   }
 
-  // ¿La palabra empieza con la letra? (ignora tildes pero respeta la Ñ)
-  function empiezaCon(palabra, letra) {
-    const base = String(palabra || '').trim().toUpperCase()
-      .replace(/Ñ/g, '\u0001').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0001/g, 'Ñ');
-    return base.charAt(0) === letra;
+  // Texto en mayúsculas, sin tildes ni espacios sobrantes (respeta la Ñ): sirve para comparar palabras
+  function normalizar(palabra) {
+    return String(palabra || '').trim().toUpperCase()
+      .replace(/Ñ/g, '\u0001').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0001/g, 'Ñ')
+      .replace(/\s+/g, ' ');
   }
 
-  return { ALFABETO, MAXIMO_RONDAS, listaPara, esValida, sortear, empiezaCon };
+  // ¿La palabra empieza con la letra?
+  function empiezaCon(palabra, letra) {
+    return normalizar(palabra).charAt(0) === letra;
+  }
+
+  return { ALFABETO, MAXIMO_RONDAS, listaPara, esValida, sortear, normalizar, empiezaCon };
 })();

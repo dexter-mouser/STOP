@@ -30,5 +30,39 @@ Stop.puntuacion = (function () {
 
   function penalizacion(exceso, porSegundo) { return exceso * porSegundo; }
 
-  return { MARCAS, puntosPalabra, puntosRonda, excesoSegundos, penalizacion };
+  // Valor en puntos de una marca según las reglas de la sala
+  function valorDeMarca(marca, reglas) {
+    if (marca === 'unica') return reglas.unica;
+    if (marca === 'repetida') return reglas.repetida;
+    if (marca === 'invalida') return reglas.invalida;
+    return 0;
+  }
+
+  // Sugiere la marca de cada palabra de una categoría: vacía o con otra letra = inválida;
+  // igual a la de otro jugador = repetida; en otro caso = única.
+  // entradas: { idJugador: { palabra } }  ->  { idJugador: marca }
+  function sugerirMarcas(entradas, letra) {
+    const conteo = {};
+    Object.values(entradas).forEach((entrada) => {
+      const clave = Stop.letras.normalizar(entrada.palabra);
+      if (clave) conteo[clave] = (conteo[clave] || 0) + 1;
+    });
+    const marcas = {};
+    Object.keys(entradas).forEach((id) => {
+      const palabra = entradas[id].palabra;
+      const clave = Stop.letras.normalizar(palabra);
+      if (!clave || !Stop.letras.empiezaCon(palabra, letra)) marcas[id] = 'invalida';
+      else marcas[id] = conteo[clave] > 1 ? 'repetida' : 'unica';
+    });
+    return marcas;
+  }
+
+  // Busca una palabra en el registro de una categoría: [{ texto, marca, valor }]. Devuelve el registro o null
+  function buscarEnRegistro(registro, palabra) {
+    const clave = Stop.letras.normalizar(palabra);
+    if (!clave) return null;
+    return (registro || []).find((anotada) => Stop.letras.normalizar(anotada.texto) === clave) || null;
+  }
+
+  return { MARCAS, puntosPalabra, puntosRonda, excesoSegundos, penalizacion, valorDeMarca, sugerirMarcas, buscarEnRegistro };
 })();

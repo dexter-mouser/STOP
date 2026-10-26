@@ -1,27 +1,64 @@
-/* anfitrion.js · Configuración de la partida y generación del código de sala */
+/* anfitrion.js · Configuración de la partida: el código de sala se actualiza solo */
 (function () {
   const { crear, vaciar } = Stop.dom;
   const almacen = Stop.almacenamiento;
   const NOMBRES_NIVEL = { inicial: 'Inicial', medio: 'Medio', dificil: 'Difícil', personalizada: 'Personalizada' };
+  const $ = (id) => document.getElementById(id);
 
   // ---------- Estado (borrador guardado en localStorage) ----------
   function valoresIniciales() {
     return {
-      nombre: 'Sala', dificultad: 'medio', rondas: 8,
+      dificultad: 'medio', rondas: 8,
       letras: Stop.letras.sortear('medio', 8),
       categorias: Stop.categorias.NIVELES.medio.slice(),
       reglas: { unica: 100, repetida: 50, invalida: 0, penalizacion: 2, gracia: 5 }
     };
   }
-  let estado = almacen.leer('anfitrion') || valoresIniciales();
+  const guardado = almacen.leer('anfitrion') || {};
+  const base = valoresIniciales();
+  const estado = {
+    dificultad: guardado.dificultad || base.dificultad,
+    rondas: guardado.rondas || base.rondas,
+    letras: guardado.letras || base.letras,
+    categorias: guardado.categorias || base.categorias,
+    reglas: Object.assign({}, base.reglas, guardado.reglas)
+  };
+  // Un borrador antiguo puede traer valores que ya no existen
+  estado.categorias = estado.categorias.filter(Stop.categorias.esValida);
+  if (!estado.categorias.length) estado.categorias = Stop.categorias.NIVELES[estado.dificultad].slice();
+  estado.letras = estado.letras.filter(Stop.letras.esValida);
 
-  const $ = (id) => document.getElementById(id);
+  let codigoActual = '';
   const guardarBorrador = () => almacen.guardar('anfitrion', estado);
 
-  function mostrarError(texto, esAviso = false) {
+  function mostrarError(texto) {
     const caja = $('mensaje');
     caja.textContent = texto || '';
-    caja.className = esAviso ? 'aviso aviso--ok' : 'aviso';
+    caja.className = 'aviso';
+  }
+
+  // ---------- Código de sala (se recalcula con cada cambio) ----------
+  function actualizarCodigo() {
+    const boton = $('codigo-sala');
+    const resultado = Stop.codigoSala.validarAjustes(estado) ? null : Stop.codigoSala.crear(estado);
+    codigoActual = resultado && resultado.ok ? resultado.codigo : '';
+    const visible = codigoActual ? Stop.codigoSala.formatear(codigoActual) : '----';
+    boton.textContent = visible;
+    boton.disabled = !codigoActual;
+    boton.setAttribute('aria-label', codigoActual ? 'Código de sala ' + visible + '. Pulsa para copiarlo.' : 'Código de sala no disponible');
+    boton.classList.toggle('codigo-grande--medio', codigoActual.length > 6 && codigoActual.length <= 10);
+    boton.classList.toggle('codigo-grande--largo', codigoActual.length > 10);
+    $('mensaje-codigo').textContent = '';
+  }
+
+  async function copiarCodigo() {
+    if (!codigoActual) return;
+    try {
+      await navigator.clipboard.writeText(codigoActual);
+      $('mensaje-codigo').textContent = 'Código copiado.';
+    } catch (error) {
+      $('mensaje-codigo').textContent = 'No se pudo copiar. Anota el código: ' + Stop.codigoSala.formatear(codigoActual);
+    }
   }
 
   // ---------- Dificultad ----------
@@ -46,7 +83,7 @@
     refrescar();
   }
 
-  // ---------- Letras ----------
+  // ---------- Letras (solo las conoce el anfitrión; no viajan en el código) ----------
   function pintarLetras() {
     const rejilla = $('cuadricula-letras');
     vaciar(rejilla);
@@ -60,7 +97,7 @@
       }));
     });
     $('orden-letras').textContent = estado.letras.length
-      ? 'Orden de rondas: ' + estado.letras.join(' · ')
+      ? 'Orden de las rondas: ' + estado.letras.join(' · ')
       : 'Aún no hay letras elegidas.';
     $('contador-letras').textContent = estado.letras.length + ' de ' + estado.rondas;
   }
@@ -92,77 +129,60 @@
   }
 
   // ---------- Categorías ----------
+  // Se mantienen en el orden del catálogo (así coinciden con las del código de sala)
+  function ordenarCategorias() {
+    const ids = Stop.categorias.CATALOGO.map((categoria) => categoria.id);
+    estado.categorias.sort((a, b) => ids.indexOf(a) - ids.indexOf(b));
+  }
+
   function pintarCategorias() {
     const grupo = $('grupo-categorias');
     vaciar(grupo);
     const editable = estado.dificultad === 'personalizada';
     Stop.categorias.CATALOGO.forEach((categoria) => {
-      const activa = estado.categorias.includes(categoria.id);
       grupo.append(crear('button', {
         clase: 'chip', type: 'button', texto: categoria.nombre,
-        'aria-pressed': String(activa), disabled: !editable,
+        'aria-pressed': String(estado.categorias.includes(categoria.id)), disabled: !editable,
         enClick: () => alternarCategoria(categoria.id)
       }));
     });
     $('nota-categorias').textContent = editable
-      ? 'Selecciona cada categoría que quieras usar.'
-      : 'Las categorías las define el nivel. Elige "Personalizada" para escogerlas.';
+      ? 'Toca cada categoría para sumarla o quitarla.'
+      : 'Las categorías las define el nivel. Elige "Personalizada" para escogerlas tú.';
   }
 
   function alternarCategoria(id) {
     const posicion = estado.categorias.indexOf(id);
     if (posicion >= 0) estado.categorias.splice(posicion, 1);
     else estado.categorias.push(id);
+    ordenarCategorias();
     guardarBorrador();
     pintarCategorias();
+    actualizarCodigo();
   }
 
   // ---------- Reglas ----------
+  const CLAVES_REGLAS = ['unica', 'repetida', 'invalida', 'penalizacion', 'gracia'];
+
   function leerReglas() {
-    ['unica', 'repetida', 'invalida', 'penalizacion', 'gracia'].forEach((clave) => {
-      estado.reglas[clave] = Number($('regla-' + clave).value);
-    });
+    CLAVES_REGLAS.forEach((clave) => { estado.reglas[clave] = Number($('regla-' + clave).value); });
     guardarBorrador();
+    actualizarCodigo();
   }
 
-  function pintarReglas() {
-    Object.keys(estado.reglas).forEach((clave) => { $('regla-' + clave).value = estado.reglas[clave]; });
-  }
-
-  // ---------- Sala ----------
-  function enlaceJugador(codigo) {
-    return new URL('jugador.html', window.location.href).href + '#' + codigo;
-  }
-
-  function mostrarSala(sala) {
-    $('sala-titulo').textContent = 'Sala lista';
-    $('sala-subtitulo').textContent = 'Comparte este código con los jugadores';
-    $('sala-id').textContent = sala.identificador;
-    $('entrada-codigo').value = sala.codigo;
-    $('sala-resultado').hidden = false;
-    $('enlace-verificacion').hidden = false;
-  }
-
-  function generarSala() {
-    estado.nombre = $('entrada-nombre').value;
+  // ---------- Iniciar la partida ----------
+  function iniciarPartida() {
     leerReglas();
-    const resultado = Stop.codigoSala.crear(estado);
-    if (!resultado.ok) return mostrarError(resultado.error);
-    mostrarError('');
-    const sala = { codigo: resultado.codigo, identificador: resultado.identificador, config: estado };
-    almacen.guardar('sala', sala);
-    almacen.borrar('verificacion'); // una sala nueva empieza una verificación nueva
-    mostrarSala(sala);
-  }
-
-  async function copiar(texto, mensaje) {
-    try {
-      await navigator.clipboard.writeText(texto);
-    } catch (error) {
-      $('entrada-codigo').select();
-      document.execCommand('copy');
-    }
-    mostrarError(mensaje, true);
+    ordenarCategorias();
+    const error = Stop.codigoSala.validar(estado);
+    if (error) return mostrarError(error);
+    const previa = almacen.leer('partida');
+    const enCurso = previa && Array.isArray(previa.rondas) && previa.rondas.some((ronda) => ronda.inicio !== null);
+    if (enCurso && !window.confirm('Ya hay una partida en curso. Si empiezas otra, la anterior se borra. ¿Continuar?')) return;
+    almacen.guardar('sala', { codigo: codigoActual, config: JSON.parse(JSON.stringify(estado)) });
+    almacen.borrar('partida');
+    almacen.borrar('verificacion');
+    window.location.href = 'partida.html';
   }
 
   // ---------- Arranque ----------
@@ -172,28 +192,23 @@
     pintarDificultad();
     pintarLetras();
     pintarCategorias();
+    actualizarCodigo();
     mostrarError('');
   }
 
   function iniciar() {
-    Stop.barra.montar('Anfitrión');
-    $('entrada-nombre').value = estado.nombre;
-    pintarReglas();
+    Stop.barra.montar('Configuración', 'anfitrion');
+    CLAVES_REGLAS.forEach((clave) => {
+      $('regla-' + clave).value = estado.reglas[clave];
+      $('regla-' + clave).addEventListener('input', leerReglas);
+    });
     refrescar();
-
-    $('entrada-nombre').addEventListener('input', (evento) => { estado.nombre = evento.target.value; guardarBorrador(); });
     $('entrada-rondas').addEventListener('change', (evento) => ajustarRondas(evento.target.value));
     $('boton-sortear').addEventListener('click', sortearLetras);
-    ['unica', 'repetida', 'invalida', 'penalizacion', 'gracia'].forEach((clave) => $('regla-' + clave).addEventListener('change', leerReglas));
-    $('boton-generar').addEventListener('click', generarSala);
-    $('boton-copiar-codigo').addEventListener('click', () => copiar($('entrada-codigo').value, 'Código copiado.'));
-    $('boton-copiar-enlace').addEventListener('click', () => copiar(enlaceJugador($('entrada-codigo').value), 'Enlace copiado.'));
-    document.addEventListener('keydown', (evento) => {
-      if (evento.key === 'Enter' && evento.target.tagName !== 'BUTTON' && evento.target.tagName !== 'A') generarSala();
-    });
-
-    const salaGuardada = almacen.leer('sala');
-    if (salaGuardada && salaGuardada.codigo) mostrarSala(salaGuardada);
+    $('codigo-sala').addEventListener('click', copiarCodigo);
+    $('boton-iniciar').addEventListener('click', iniciarPartida);
+    const previa = almacen.leer('partida');
+    $('enlace-continuar').hidden = !(previa && previa.version === 3);
   }
 
   iniciar();

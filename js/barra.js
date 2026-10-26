@@ -2,28 +2,63 @@
 window.Stop = window.Stop || {};
 
 Stop.barra = (function () {
-  const { crear } = Stop.dom;
+  const { crear, vaciar } = Stop.dom;
   let dialogo = null;
+  let mostrarGuia = null;
+  let guiaInicial = 'anfitrion';
 
-  const PASOS = [
-    'El anfitrión crea la sala, ajusta las reglas y comparte el código.',
-    'Cada jugador entra con el código y su nombre.',
-    'En cada ronda hay una letra: inicia, escribe una palabra por categoría y pulsa STOP.',
-    'Entre todos coordinan las palabras y cada jugador marca las suyas: única, repetida o inválida.',
-    'Al final, el anfitrión audita al jugador con más puntos en la verificación.'
-  ];
+  // Explicaciones sencillas, pensadas para que las entienda un niño de 5 años
+  const GUIAS = {
+    anfitrion: {
+      titulo: 'Soy anfitrión',
+      pasos: [
+        'Tú eres el jefe del juego. Eliges cuántas rondas hay y qué cosas hay que buscar: animales, colores, frutas...',
+        'La computadora te da un código secreto. Díselo a tus amigos para que entren al juego.',
+        'Dices una letra bien fuerte. ¡Todos piensan palabras que empiecen con esa letra!',
+        'Aprietas el botón para empezar y el reloj empieza a correr.',
+        'Cuando un amigo grita ¡STOP!, tú aprietas el botón STOP. Todos dejan de escribir.',
+        'Cada amigo dice sus palabras y tú las anotas. Si nadie más dijo esa palabra, vale 100 puntos. Si otro amigo dijo la misma, vale 50. Si no sirve, vale 0.',
+        'Al final, el amigo que dice que tiene más puntos te enseña sus palabras. Tú miras si dijo la verdad. ¡Y gana el que no hizo trampa!'
+      ]
+    },
+    jugador: {
+      titulo: 'Soy jugador',
+      pasos: [
+        'Tú juegas con tu celular. Pídele el código secreto al anfitrión y escríbelo con tu nombre.',
+        'El anfitrión dice una letra en voz alta. ¡Escúchala bien! Tu celular no la dice: es un secreto.',
+        'Aprieta Iniciar ronda. Escribe una palabra para cada cosa: un animal, un color... Todas tienen que empezar con la letra.',
+        'Cuando termines, aprieta STOP y grita ¡STOP! ¡Tu celular se queda quieto!',
+        'Dices tus palabras en voz alta y las enseñas en tu celular. El anfitrión las anota.',
+        'Marca cada palabra: Única si nadie más la dijo, Repetida si otro amigo dijo la misma, Inválida si no sirve. Tu celular suma tus puntos.',
+        'Si tienes más puntos que todos, el anfitrión revisa tus palabras. ¡Siempre di la verdad!'
+      ]
+    }
+  };
 
   function crearDialogo() {
-    const cerrar = crear('button', { clase: 'boton boton--primario boton--pequeno', type: 'button', texto: 'Entendido', enClick: () => dialogo.close() });
+    const botones = {};
+    const pestanas = crear('div', { clase: 'chips', role: 'group', 'aria-label': 'Elige tu papel' });
+    const lista = crear('ol', {});
+    mostrarGuia = (clave) => {
+      Object.keys(GUIAS).forEach((otra) => botones[otra].setAttribute('aria-pressed', String(otra === clave)));
+      vaciar(lista);
+      GUIAS[clave].pasos.forEach((paso) => lista.append(crear('li', { texto: paso })));
+    };
+    Object.keys(GUIAS).forEach((clave) => {
+      botones[clave] = crear('button', { clase: 'chip', type: 'button', texto: GUIAS[clave].titulo, enClick: () => mostrarGuia(clave) });
+      pestanas.append(botones[clave]);
+    });
     dialogo = crear('dialog', { 'aria-labelledby': 'titulo-ayuda' },
       crear('h2', { id: 'titulo-ayuda', clase: 'tarjeta__titulo', texto: 'Cómo jugar' }),
-      crear('ol', {}, PASOS.map((paso) => crear('li', { texto: paso }))),
-      cerrar);
+      pestanas, lista,
+      crear('button', { clase: 'boton boton--primario boton--pequeno', type: 'button', texto: 'Entendido', enClick: () => dialogo.close() }));
     document.body.append(dialogo);
   }
 
-  function abrirAyuda() {
+  // clave: 'anfitrion' o 'jugador' (si no se indica, la de la página)
+  function abrirAyuda(clave) {
     if (!dialogo) crearDialogo();
+    mostrarGuia(GUIAS[clave] ? clave : guiaInicial);
     if (typeof dialogo.showModal === 'function') dialogo.showModal();
     else dialogo.setAttribute('open', '');
   }
@@ -37,12 +72,11 @@ Stop.barra = (function () {
       });
     }
     Stop.tono.ACENTOS.forEach((acento) => {
-      const boton = crear('button', {
+      grupo.append(crear('button', {
         clase: 'punto-acento', type: 'button', 'aria-label': 'Acento ' + acento.nombre,
         'data-color': acento.color, style: '--color: ' + acento.color,
         enClick: () => Stop.tono.aplicarAcento(acento.color)
-      });
-      grupo.append(boton);
+      }));
     });
     // Selector libre de color
     const libre = crear('input', {
@@ -69,8 +103,9 @@ Stop.barra = (function () {
   }
 
   // Monta la barra dentro del contenedor #barra
-  function montar(titulo) {
-    const ayuda = crear('button', { clase: 'boton-circular', type: 'button', 'aria-label': 'Ayuda: cómo jugar', enClick: abrirAyuda });
+  function montar(titulo, guia) {
+    if (GUIAS[guia]) guiaInicial = guia;
+    const ayuda = crear('button', { clase: 'boton-circular', type: 'button', 'aria-label': 'Ayuda: cómo jugar', enClick: () => abrirAyuda() });
     ayuda.append(Stop.iconos.crear('ayuda', 'Ayuda'));
     const marca = crear('a', { clase: 'barra__marca', href: 'index.html' }, Stop.iconos.crearLogo(), crear('span', { texto: titulo }));
     document.getElementById('barra').append(crear('header', { clase: 'barra' }, marca, crearAcentos(), ayuda, crearBotonTema()));

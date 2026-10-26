@@ -18,13 +18,13 @@
 
     <!-- 1. Ingreso -->
     <section id="pantalla-ingreso" class="tarjeta">
-      <h1 class="tarjeta__titulo">Unirme a una sala</h1>
-      <p class="tarjeta__subtitulo">Pega el código que te compartió el anfitrión y escribe tu nombre.</p>
+      <h1 class="tarjeta__titulo">Entrar a la partida</h1>
+      <p class="tarjeta__subtitulo">Escribe el código que te dio el anfitrión y tu nombre.</p>
       <form id="formulario-ingreso" class="contenido" style="width: 100%; gap: 14px; padding: 0">
         <div class="campo"><label class="etiqueta" for="entrada-codigo">Código de sala</label><input id="entrada-codigo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
         <div class="campo"><label class="etiqueta" for="entrada-jugador">Tu nombre</label><input id="entrada-jugador" type="text" maxlength="20" autocomplete="nickname"></div>
         <p class="aviso" id="mensaje-ingreso" role="status"></p>
-        <button class="boton boton--primario" type="submit">Entrar a la sala</button>
+        <button class="boton boton--primario" type="submit">Entrar</button>
       </form>
     </section>
 
@@ -36,9 +36,10 @@
           <span class="chip" id="ronda-numero"></span>
         </div>
         <div class="tarjeta letra-tarjeta">
-          <div class="insignia" id="letra-insignia" role="img"><div class="insignia__letra" id="letra-actual" aria-hidden="true"></div></div>
+          <div class="insignia" id="ronda-insignia" role="img"><div class="insignia__letra" id="ronda-cifra" aria-hidden="true"></div></div>
           <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start">
-            <span class="etiqueta">Letra de la ronda</span>
+            <span class="etiqueta">Ronda en curso</span>
+            <span class="tarjeta__subtitulo">La letra te la dicta el anfitrión.</span>
             <span class="tarjeta__subtitulo" id="hora-inicio"></span>
             <button class="boton boton--primario boton--pequeno" type="button" id="boton-iniciar">Iniciar ronda</button>
           </div>

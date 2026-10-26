@@ -30,5 +30,17 @@ Stop.tiempo = (function () {
     return () => clearInterval(identificador);
   }
 
-  return { formatear, aSegundos, iniciarReloj };
+  // Milisegundos -> segundos transcurridos desde la medianoche
+  function segundosDelDia(milisegundos) {
+    const fecha = new Date(milisegundos);
+    return fecha.getHours() * 3600 + fecha.getMinutes() * 60 + fecha.getSeconds();
+  }
+
+  // Milisegundos -> "MM:SS" (para cronómetros)
+  function duracion(milisegundos) {
+    const total = Math.max(0, Math.floor(milisegundos / 1000));
+    return dosDigitos(Math.floor(total / 60)) + ':' + dosDigitos(total % 60);
+  }
+
+  return { formatear, aSegundos, segundosDelDia, duracion, iniciarReloj };
 })();

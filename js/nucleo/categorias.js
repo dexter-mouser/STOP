@@ -13,14 +13,12 @@ Stop.categorias = (function () {
     { id: 'ciudad', nombre: 'Ciudad' },
     { id: 'marca', nombre: 'Marca' },
     { id: 'personaje', nombre: 'Personaje famoso' },
-    { id: 'pelicula', nombre: 'Película' },
-    { id: 'elemento', nombre: 'Elemento químico' },
-    { id: 'accidente', nombre: 'Accidente geográfico' }
+    { id: 'pelicula', nombre: 'Película' }
   ];
 
   const INICIAL = ['nombre', 'animal', 'pais', 'cosa', 'color'];
   const MEDIO = INICIAL.concat(['fruta', 'profesion', 'ciudad', 'marca']);
-  const DIFICIL = MEDIO.concat(['personaje', 'pelicula', 'elemento', 'accidente']);
+  const DIFICIL = MEDIO.concat(['personaje', 'pelicula']);
   const NIVELES = { inicial: INICIAL, medio: MEDIO, dificil: DIFICIL, personalizada: INICIAL };
 
   const ids = CATALOGO.map((categoria) => categoria.id);

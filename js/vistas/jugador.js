@@ -5,7 +5,7 @@
   const $ = (id) => document.getElementById(id);
   const ETIQUETAS_MARCA = { unica: 'Única', repetida: 'Repetida', invalida: 'Inválida' };
 
-  let sesion = almacen.leer('jugador'); // { codigo, identificador, nombre, config, ronda, fase, rondas: [...] }
+  let sesion = almacen.leer('jugador'); // { codigo, nombre, config, ronda, fase, rondas: [...] }
   const guardar = () => almacen.guardar('jugador', sesion);
 
   // ---------- Pantallas ----------
@@ -28,9 +28,9 @@
     if (!resultado.ok) { $('mensaje-ingreso').textContent = resultado.error; return; }
     if (!nombre) { $('mensaje-ingreso').textContent = 'Escribe tu nombre.'; return; }
     sesion = {
-      codigo: resultado.codigo, identificador: resultado.identificador, nombre,
+      codigo: resultado.codigo, nombre,
       config: resultado.config, ronda: 0, fase: 'espera',
-      rondas: resultado.config.letras.map((letra) => ({ letra, respuestas: {}, marcas: {}, inicio: null, fin: null }))
+      rondas: Array.from({ length: resultado.config.rondas }, () => ({ respuestas: {}, marcas: {}, inicio: null, fin: null }))
     };
     guardar();
     pintarRonda();
@@ -39,10 +39,10 @@
   // ---------- Ronda ----------
   function pintarRonda() {
     const ronda = rondaActual();
-    $('ronda-sala').textContent = 'Sala ' + sesion.identificador + ' · ' + sesion.nombre;
+    $('ronda-sala').textContent = 'Sala ' + Stop.codigoSala.formatear(sesion.codigo) + ' · ' + sesion.nombre;
     $('ronda-numero').textContent = 'Ronda ' + (sesion.ronda + 1) + ' de ' + sesion.config.rondas;
-    $('letra-actual').textContent = ronda.letra;
-    $('letra-insignia').setAttribute('aria-label', 'Letra de la ronda: ' + ronda.letra);
+    $('ronda-cifra').textContent = String(sesion.ronda + 1);
+    $('ronda-insignia').setAttribute('aria-label', 'Ronda ' + (sesion.ronda + 1));
     $('hora-inicio').textContent = 'Inicio ' + Stop.tiempo.formatear(ronda.inicio);
     $('boton-iniciar').hidden = sesion.fase !== 'espera';
     $('boton-stop').disabled = sesion.fase !== 'jugando';
@@ -86,11 +86,9 @@
           enClick: () => { ronda.marcas[id] = marca; guardar(); pintarCoordinacion(); }
         }));
       });
-      const pista = !vacia && !Stop.letras.empiezaCon(palabra, ronda.letra) ? 'No empieza con ' + ronda.letra : '';
       zona.append(crear('div', { clase: 'fila-palabra' },
         crear('span', { clase: 'etiqueta fila-palabra__nombre', texto: Stop.categorias.nombrePorId(id) }),
-        crear('div', {}, crear('div', { clase: 'fila-palabra__palabra', texto: vacia ? '—' : palabra }),
-          crear('div', { clase: 'fila-palabra__pista', texto: pista })),
+        crear('div', { clase: 'fila-palabra__palabra', texto: vacia ? '—' : palabra }),
         marcas,
         crear('span', { clase: 'puntos', texto: String(Stop.puntuacion.puntosPalabra(ronda.respuestas[id], ronda.marcas[id], sesion.config.reglas)) })));
     });
@@ -146,7 +144,7 @@
 
   function pintarFinal() {
     const total = sesion.rondas.reduce((suma, ronda) => suma + puntosDe(ronda), 0);
-    $('final-jugador').textContent = sesion.nombre + ' · Sala ' + sesion.identificador;
+    $('final-jugador').textContent = sesion.nombre + ' · Sala ' + Stop.codigoSala.formatear(sesion.codigo);
     $('total-puntos').textContent = String(total);
     const detalle = $('detalle-final');
     vaciar(detalle);
@@ -157,7 +155,7 @@
         .join(' · ');
       detalle.append(crear('div', { clase: 'detalle-ronda' },
         crear('div', { clase: 'detalle-ronda__cabecera' },
-          crear('span', { texto: 'Ronda ' + (indice + 1) + ' · ' + ronda.letra }),
+          crear('span', { texto: 'Ronda ' + (indice + 1) }),
           crear('span', { texto: puntosDe(ronda) + ' pts' })),
         crear('div', { clase: 'detalle-ronda__datos', texto: 'Inicio ' + Stop.tiempo.formatear(ronda.inicio) + ' · Final ' + Stop.tiempo.formatear(ronda.fin) }),
         crear('div', { clase: 'detalle-ronda__datos', texto: palabras })));
@@ -175,7 +173,7 @@
 
   // ---------- Arranque ----------
   function iniciar() {
-    Stop.barra.montar('Jugador');
+    Stop.barra.montar('Jugador', 'jugador');
     Stop.tiempo.iniciarReloj($('hora-actual'));
     $('formulario-ingreso').addEventListener('submit', entrar);
     $('boton-iniciar').addEventListener('click', iniciarRonda);

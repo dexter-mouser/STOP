@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12131A">
+  <title>Stop · Partida</title>
+  <link rel="icon" href="img/icono.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/tono.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Tema y acento se aplican antes de pintar para evitar parpadeos -->
+  <script src="js/nucleo/almacenamiento.js"></script>
+  <script src="js/tono.js"></script>
+</head>
+<body>
+  <div id="barra"></div>
+  <main class="contenido">
+
+    <section id="pantalla-sin-sala" class="tarjeta tarjeta--centro" hidden>
+      <h1 class="tarjeta__titulo">Aún no hay una sala lista</h1>
+      <p class="tarjeta__subtitulo">Primero configura la partida y elige las letras.</p>
+      <a class="boton boton--primario" href="anfitrion.html">Ir a la configuración</a>
+    </section>
+
+    <div id="pantalla-partida" class="contenido" style="width: 100%; padding: 0" hidden>
+      <section class="fila-tarjetas">
+        <article class="tarjeta tarjeta--ronda">
+          <div class="insignia insignia--grande" id="letra-insignia" role="img"><div class="insignia__letra" id="letra-grande" aria-hidden="true"></div></div>
+          <div>
+            <span class="etiqueta" id="sala-codigo"></span>
+            <h1 class="tarjeta__titulo" id="ronda-titulo"></h1>
+            <span class="chip" id="estado-ronda"></span>
+          </div>
+        </article>
+        <article class="tarjeta tarjeta--centro">
+          <span class="etiqueta">Cronómetro de la ronda</span>
+          <p class="reloj-grande" id="cronometro" aria-live="off">00:00</p>
+          <p class="tarjeta__subtitulo" id="cronometro-detalle"></p>
+          <p class="tarjeta__subtitulo">Hora: <strong id="hora-actual" aria-live="off">--:--:--</strong></p>
+          <button class="boton boton--primario boton-accion" type="button" id="boton-accion"></button>
+        </article>
+      </section>
+
+      <section class="tarjeta">
+        <span class="etiqueta" id="etiqueta-orden">Orden de la partida</span>
+        <div class="orden" id="orden-juego" role="list" aria-labelledby="etiqueta-orden"></div>
+      </section>
+
+      <div id="zona-fase" class="contenido" style="width: 100%; padding: 0"></div>
+    </div>
+  </main>
+
+  <script src="js/nucleo/dom.js"></script>
+  <script src="js/nucleo/iconos.js"></script>
+  <script src="js/nucleo/tiempo.js"></script>
+  <script src="js/nucleo/letras.js"></script>
+  <script src="js/nucleo/categorias.js"></script>
+  <script src="js/nucleo/puntuacion.js"></script>
+  <script src="js/nucleo/codigo-sala.js"></script>
+  <script src="js/barra.js"></script>
+  <script src="js/vistas/partida.js"></script>
+</body>
+</html>
